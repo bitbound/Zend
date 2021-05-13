@@ -1,0 +1,26 @@
+.dropzone {
+    margin-top: 50px;
+    width: 300px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 0 5px 2px rgb(90 90 90);
+    transition: .25s linear box-shadow;
+}
+
+.dropzone:hover {
+    transition: .25s linear box-shadow;
+    box-shadow: 0 0 10px 4px rgb(90 90 90);
+}
+
+.dropcard .card-body {
+    height: 100px;
+}
+
+.droptext {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 1.25em;
+}
