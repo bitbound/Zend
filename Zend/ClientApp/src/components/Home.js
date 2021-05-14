@@ -21,7 +21,8 @@ export class Home extends Component {
 
     this.state = {
       uploads: existingUploads,
-      filteredUploads: existingUploads
+      filteredUploads: existingUploads,
+      clipboardText: ""
     }
   }
 
@@ -156,6 +157,13 @@ export class Home extends Component {
     })
   }
 
+  setClipboardText = (text) => {
+    window.navigator.clipboard.writeText(text);
+    this.setState({
+      clipboardText: text
+    })
+  }
+
   render() {
     return (
       <div className="text-center">
@@ -209,7 +217,7 @@ export class Home extends Component {
           <CardBody>
             <div className="upload-body">
               {x.percentUploaded < 1 && (
-                  <h6 className="font-weight-bold">Upload:</h6>
+                <h6 className="font-weight-bold">Upload:</h6>
               )}
 
               {x.percentUploaded < 1 && (
@@ -230,7 +238,9 @@ export class Home extends Component {
               <h6 className="font-weight-bold">Link:</h6>
               <div><a href={x.url} target="_blank" rel="noopener noreferrer">{x.url}</a></div>
 
-              <div className="text-right mt-2" style={{gridColumn: 'span 2'}}>
+              <div className="text-right mt-2" style={{ gridColumn: 'span 2' }}>
+
+                {this.renderCopyButton(x)}
                 <button className="btn btn-sm btn-danger" onClick={() => this.removeUpload(x.id)}>
                   Delete
                 </button>
@@ -240,5 +250,22 @@ export class Home extends Component {
         </Card>
       )
     })
+  }
+
+  renderCopyButton(upload) {
+    if (this.state.clipboardText == upload.url) {
+      return (
+        <button className="btn btn-sm btn-success mr-2" onClick={() => this.setClipboardText(upload.url)}>
+          Copied
+        </button>
+      )
+    }
+    else {
+      return (
+        <button className="btn btn-sm btn-secondary mr-2" onClick={() => this.setClipboardText(upload.url)}>
+          Copy
+        </button>
+      )
+    }
   }
 }
