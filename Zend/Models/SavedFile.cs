@@ -14,6 +14,8 @@ namespace Zend.Models
 
         public string FileName { get; init; }
 
+        public long FileSize { get; set; }
+
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; init; }
         public DateTimeOffset UploadedAt { get; init; }

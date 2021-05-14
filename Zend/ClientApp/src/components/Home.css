@@ -24,3 +24,22 @@
     white-space: nowrap;
     font-size: 1.25em;
 }
+
+.uploads-frame {
+    width: 300px;
+}
+
+.upload-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    row-gap: .5em;
+    column-gap: .5em;
+}
+
+.upload-body > h6 {
+    white-space: nowrap;
+}
+
+.upload-body > div {
+    overflow-wrap: anywhere;
+}

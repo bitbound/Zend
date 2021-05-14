@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import Card from 'reactstrap/lib/Card';
 import CardBody from 'reactstrap/lib/CardBody';
-import { Upload } from '../models/Upload';
+import { UploadedFile } from '../models/UploadedFile';
+import { toLocaleTimestamp } from '../utils/dateTime';
 import "./Home.css";
 
 /* Wow.  React without TypeScript is really not fun.  */
@@ -10,11 +11,17 @@ export class Home extends Component {
   static displayName = Home.name;
 
   hiddenFileInput = React.createRef();
+  searchInput = React.createRef();
 
   constructor() {
     super();
+
+    const uploadsString = window.localStorage.getItem("uploads");
+    const existingUploads = (uploadsString && JSON.parse(uploadsString)) || [];
+
     this.state = {
-      uploads: []
+      uploads: existingUploads,
+      filteredUploads: existingUploads
     }
   }
 
@@ -25,6 +32,8 @@ export class Home extends Component {
     });
 
     window.addEventListener("drop", ev => {
+      ev.preventDefault();
+
       if (ev.dataTransfer.files.length < 1) {
         return;
       }
@@ -41,6 +50,30 @@ export class Home extends Component {
     window.removeEventListener("drop");
   }
 
+  filterUploads = () => {
+    if (!this.state.uploads || this.state.uploads.length === 0) {
+      this.setState({
+        filteredUploads: []
+      })
+    }
+
+    if (!this.searchInput.current || !this.searchInput.current.value) {
+      this.setState({
+        filteredUploads: this.state.uploads
+      })
+    }
+
+    const searchTerm = this.searchInput.current.value.toLowerCase();
+
+    const filtered = this.state.uploads.filter(x =>
+      x.fileName.toLowerCase().includes(searchTerm));
+
+    this.setState({
+      filteredUploads: filtered
+    })
+  }
+
+
   openFilePrompt = () => {
     if (this.hiddenFileInput?.current) {
       this.hiddenFileInput.current.click();
@@ -48,35 +81,79 @@ export class Home extends Component {
   }
 
   uploadFiles = (fileList) => {
-    if ((fileList || []).length == 0) {
+    if ((fileList || []).length === 0) {
       return;
     }
 
-    console.log(fileList);
+    for (let i = 0; i < fileList?.length; i++) {
+      const file = fileList[i];
+      const upload = new UploadedFile(file.name, file.size, new Date());
+      this.state.uploads.unshift(upload);
 
-    for (var i = 0; i < fileList?.length; i++) {
-      var file = fileList[i];
-      var upload = new Upload(file.name, file.size, new Date());
-
-      var fd = new FormData();
+      const fd = new FormData();
       fd.append('file', file);
-      var xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.open('POST', `${window.location.origin}/api/file`, true);
 
-      xhr.addEventListener("load", function () {
-          if (xhr.status === 200) {
-              upload.url = xhr.responseText;
-          }
-          else {
-              alert(`File upload failed. Status code: ${xhr.status}`);
-          }
+      xhr.addEventListener("load", () => {
+        if (xhr.status === 200) {
+          let savedFile = JSON.parse(xhr.responseText);
+          upload.id = savedFile.id;
+          upload.url = `${window.location.origin}/api/file/${upload.id}`;
+
+          this.setState({
+            uploads: this.state.uploads,
+          });
+
+          this.filterUploads();
+
+          window.localStorage.setItem("uploads", JSON.stringify(this.state.uploads));
+        }
+        else {
+          alert(`File upload failed. Status code: ${xhr.status}`);
+          this.removeUpload(upload.id);
+        }
       });
-      
-      xhr.upload.addEventListener("progress", function (e) {
-        upload.percentUploaded = e.loaded / file.size;
+
+      xhr.upload.addEventListener("progress", (e) => {
+        const newPercent = e.loaded / e.total;
+
+        upload.percentUploaded = newPercent;
+
+        this.setState({
+          uploads: this.state.uploads
+        });
+
+        this.filterUploads();
       });
       xhr.send(fd);
     }
+  }
+
+  removeAllUploads = () => {
+    if (!this.state.uploads || this.state.uploads.length == 0) {
+      return;
+    }
+
+    this.state.uploads.forEach((x, index) => {
+      window.setTimeout(() => {
+        this.removeUpload(x.id);
+      }, index * 100)
+    });
+  }
+
+  removeUpload = (id) => {
+    const index = this.state.uploads.findIndex(x => x.id === id);
+    this.state.uploads.splice(index, 1);
+    this.setState({
+      uploads: this.state.uploads
+    });
+
+    this.filterUploads();
+
+    fetch(`${window.location.origin}/api/file/${id}`, {
+      method: 'delete'
+    })
   }
 
   render() {
@@ -100,36 +177,67 @@ export class Home extends Component {
             <div className="searchbox mt-2">
               <label>Search</label>
               <br />
-              <input type="text" className="form-control"></input>
+              <input ref={this.searchInput} type="text" className="form-control" onInput={this.filterUploads}></input>
             </div>
           </div>
 
-          <div className="text-left mt-3">
+          <div className="text-right mt-2">
+            <button className="btn btn-sm btn-danger" onClick={this.removeAllUploads}>
+              Delete All</button>
+          </div>
+
+          <div className="uploads-frame text-left mt-3">
             {this.renderUploads()}
           </div>
 
         </div>
 
-        <input ref={this.hiddenFileInput} type="file" hidden></input>
+        <input ref={this.hiddenFileInput} type="file" multiple hidden></input>
       </div>
     );
   }
 
   renderUploads() {
-    if (!this.state.uploads || this.state.uploads.length == 0) {
-      return "No uploads yet.";
+    if (!this.state.filteredUploads || this.state.filteredUploads.length === 0) {
+      return "No uploads found.";
     }
 
-    this.state.uploads.map(x => {
-      var percentUploaded = Math.round(x.percentUploaded * 100).toString() + "%";
+    return this.state.filteredUploads.map(x => {
+
       return (
-        <div>
-          <div>x.fileName</div>
-          <div>x.fileSize</div>
-          <div>x.uploadDate</div>
-          <div>x.url</div>
-          <div>percentUploaded</div>
-        </div>
+        <Card key={x.id} className="small mb-3">
+          <CardBody>
+            <div className="upload-body">
+              {x.percentUploaded < 1 && (
+                  <h6 className="font-weight-bold">Upload:</h6>
+              )}
+
+              {x.percentUploaded < 1 && (
+                <div>
+                  <progress className="w-100" value={x.percentUploaded} max={1}></progress>
+                </div>
+              )}
+
+              <h6 className="font-weight-bold">Name:</h6>
+              <div>{x.fileName}</div>
+
+              <h6 className="font-weight-bold">Size:</h6>
+              <div>{Number(x.fileSize).toLocaleString()}</div>
+
+              <h6 className="font-weight-bold">At:</h6>
+              <div>{toLocaleTimestamp(x.uploadedAt)}</div>
+
+              <h6 className="font-weight-bold">Link:</h6>
+              <div><a href={x.url} target="_blank" rel="noopener noreferrer">{x.url}</a></div>
+
+              <div className="text-right mt-2" style={{gridColumn: 'span 2'}}>
+                <button className="btn btn-sm btn-danger" onClick={() => this.removeUpload(x.id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
       )
     })
   }

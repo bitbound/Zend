@@ -40,6 +40,11 @@ namespace Zend.Controllers
 
             var result = await _fileService.Load(id);
 
+            if (result.Item1 is null || result.Item2 is null)
+            {
+                return NotFound("The file does not exist.");
+            }
+
             var mimeType = "application/octet-stream";
 
             var contentProvider = new FileExtensionContentTypeProvider();
@@ -64,5 +69,12 @@ namespace Zend.Controllers
             return await _fileService.Save(file);
         }
 
+        [IgnoreAntiforgeryToken]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Post(string id)
+        {
+            await _fileService.Delete(id);
+            return NoContent();
+        }
     }
 }
