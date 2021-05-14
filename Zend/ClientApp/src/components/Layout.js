@@ -12,7 +12,7 @@ export class Layout extends Component {
         </h2>
      
         <div className="text-dark text-muted ml-2 small">
-          Soothingly simple file transfer.
+          Soothingly simple file sharing.
         </div>
         <div className="ml-2 small">
           <a href="swagger" target="_blank" rel="noopener noreferrer">API Reference</a>
