@@ -150,6 +150,8 @@ export class Home extends Component {
       uploads: this.state.uploads
     });
 
+    window.localStorage.setItem("uploads", JSON.stringify(this.state.uploads));
+
     this.filterUploads();
 
     fetch(`${window.location.origin}/api/file/${id}`, {

@@ -39,14 +39,12 @@ namespace Zend.Services
             }
 
             var savedFile = await _appDb.SavedFiles.FindAsync(idResult);
-            
-            if (savedFile is null)
-            {
-                return;
-            }
 
-            _appDb.SavedFiles.Remove(savedFile);
-            await _appDb.SaveChangesAsync();
+            if (savedFile is not null)
+            {
+                _appDb.SavedFiles.Remove(savedFile);
+                await _appDb.SaveChangesAsync();
+            }
 
             try
             {
