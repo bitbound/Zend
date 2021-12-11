@@ -71,7 +71,7 @@ namespace Zend.Controllers
 
         [IgnoreAntiforgeryToken]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Post(string id)
+        public async Task<IActionResult> Delete(string id)
         {
             await _fileService.Delete(id);
             return NoContent();
