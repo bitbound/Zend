@@ -6,3 +6,5 @@
 /.vs/Zend
 *.db
 /Zend/publish.cmd
+/Zend/Zend.db-shm
+/Zend/Zend.db-wal
