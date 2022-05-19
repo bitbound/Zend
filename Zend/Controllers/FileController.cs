@@ -18,16 +18,10 @@ namespace Zend.Controllers
     public class FileController : ControllerBase
     {
         private readonly IFileService _fileService;
-        private readonly IWebHostEnvironment _hostEnv;
-        private readonly string _appData;
 
-        public FileController(
-            IFileService fileService,
-            IWebHostEnvironment hostEnv)
+        public FileController(IFileService fileService)
         {
             _fileService = fileService;
-            _hostEnv = hostEnv;
-            _appData = Directory.CreateDirectory(Path.Combine(_hostEnv.ContentRootPath, "App_Data")).FullName;
         }
 
         [HttpGet("{id}")]

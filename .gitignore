@@ -5,3 +5,4 @@
 /Zend/App_Data
 /.vs/Zend
 *.db
+/Zend/publish.cmd
